@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <title>RealtimeLapse</title>
+    <script type="text/javascript">
+        navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+        //window.URLのAPIをすべてwindow.URLに統一
+        window.URL = window.URL || window.webkitURL;
+
+        if (!navigator.getUserMedia) {
+            alert("カメラ未対応のブラウザです。");
+        }
+
+        // 変数
+        var canvas = document.getElementById("canvas"),
+                context = canvas.getContext("2d"),
+                video = document.getElementById("video"),
+                btnStart = document.getElementById("start"),
+                btnStop = document.getElementById("stop"),
+                count = 0,
+                videoObj = {
+                    video: true,
+                    audio: false
+                };
+
+        btnStart.addEventListener("click", function () {
+            var localMediaStream, timer;
+
+            if (navigator.getUserMedia) {
+                navigator.getUserMedia(videoObj, function (stream) {
+                    localMediaStream = stream;
+                    video.src = window.URL.createObjectURL(localMediaStream);
+                    timer = setInterval(function () {
+                        var canvas = document.getElementById("canvas");
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        var e = document.createEvent("MouseEvents");
+                        e.initMouseEvent("click", true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+                        var btn = document.getElementById("btn-download");
+                        btn.href = canvas.toDataURL('image/png');
+                        btn.download = count++;
+                        btn.dispatchEvent(e);
+                    }, 6000);
+                }, function (error) {
+                    console.error("getUserMedia error: ", error.code);
+                });
+
+                btnStop.addEventListener("click", function () {
+                    localMediaStream.stop();
+                    clearInterval(timer);
+                });
+
+            }
+        });
+    </script>
+    <style>
+        video,
+        canvas{
+            width: 320px;
+            height: 240px;
+        }
+
+        #btn-download {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<article>
+    <video id="video" autoplay></video>
+    <section>
+        <button id="start">Start</button>
+        <button id="stop">Stop</button>
+        <a download="sample" id="btn-download">download</a>
+    </section>
+    <canvas id="canvas"></canvas>
+</article>
+
+</body>
+</html>
